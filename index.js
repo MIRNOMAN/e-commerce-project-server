@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const app = express()
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 app.use(cors())
@@ -29,12 +29,97 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+
+    
+    const cardCollection = client.db('cardsDB').collection('cards')
+    
+
+
+
+
+    app.get('/cards', async(req, res) =>{
+      let query = {};
+      if(req.query?.brand_name){
+        query= {brand_name:req.query.brand_name}
+      }
+        const result = await cardCollection.find(query).toArray();
+        res.send(result);
+    })
+
+  
+  
+
+    app.get('/cards/:brand_name', async(req, res) =>{
+      const brandName = req.params.brand_name; 
+      console.log(brandName);
+      const filter = {brand_name: brandName};
+      const result = await cardCollection.find(filter).toArray();
+      res.send(result);
+
+    })
+
+    app.get('/details/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await cardCollection.findOne(query);
+      res.send(result);
+      console.log(result);
+    })
+
+    app.get('/updates/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await cardCollection.findOne(query)
+      res.send(result)
+    })
+
+
+    app.put('/updates/:id', async (req, res) =>{
+      const id = req.params.id;
+      const filter = {_id: new ObjectId(id)}
+      const options = {upsert: true}
+      const updateCoffe = req.body;
+      const update = {
+        $set :{
+         
+          brand_name: updateCoffe.brand_name,
+          name: updateCoffe.name,
+          type: updateCoffe.type,
+          price: updateCoffe.price,
+          rating: updateCoffe.rating,
+          description: updateCoffe.description,
+          photo: updateCoffe.photo
+        
+          
+        }
+      }
+      const result = await cardCollection.updateOne(filter, update, options)
+      res.send(result)
+    })
+
+
+
+    
+
+
+    app.post('/cards', async(req, res) => {
+        const newCards = req.body;
+        console.log(newCards);
+
+        const result = await cardCollection.insertOne(newCards);
+        res.send(result);
+    })
+
+
+   
+
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
