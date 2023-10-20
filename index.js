@@ -32,10 +32,11 @@ async function run() {
 
     
     const cardCollection = client.db('cardsDB').collection('cards')
+    const myCardDatabase = client.db("myCardDB").collection('myCard')
     
 
 
-
+//  data server to client
 
     app.get('/cards', async(req, res) =>{
       let query = {};
@@ -47,6 +48,7 @@ async function run() {
     })
 
   
+    // brand card details
   
 
     app.get('/cards/:brand_name', async(req, res) =>{
@@ -58,6 +60,8 @@ async function run() {
 
     })
 
+    // card details
+
     app.get('/details/:id', async(req, res) => {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
@@ -66,12 +70,16 @@ async function run() {
       console.log(result);
     })
 
+
+        // update handle
+
     app.get('/updates/:id', async (req, res) => {
       const id = req.params.id;
       const query = {_id: new ObjectId(id)}
       const result = await cardCollection.findOne(query)
       res.send(result)
     })
+
 
 
     app.put('/updates/:id', async (req, res) =>{
@@ -99,7 +107,7 @@ async function run() {
 
 
 
-    
+    // Add to product
 
 
     app.post('/cards', async(req, res) => {
@@ -110,7 +118,29 @@ async function run() {
         res.send(result);
     })
 
+    // add to card
+   
+    app.get('/cart', async ( req, res ) => {
+      const result = await myCardDatabase.find().toArray();
+      res.send(result);
+    })
 
+    app.post('/cart', async ( req, res ) => {
+      const product = req.body;
+      const result = await myCardDatabase.insertOne(product)
+      res.send(result);
+    })
+
+
+
+    // delete items
+
+    app.delete('/cart/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await myCardDatabase.deleteOne(query)
+      res.send(result)
+    })
    
 
 
